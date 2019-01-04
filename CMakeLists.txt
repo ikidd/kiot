@@ -1,40 +1,54 @@
-project(asdf)
-set(PROJECT_VERSION "5.1.90")
-set(PROJECT_VERSION_MAJOR 5)
+cmake_minimum_required(VERSION 3.16)
 
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
-set(QT_MIN_VERSION "5.3.0")
+project(linux-ha-control)
+set(PROJECT_VERSION "6.0.80")
+set(PROJECT_VERSION_MAJOR 6)
 
-find_package(ECM 0.0.11 REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+set(PROJECT_DEP_VERSION "6.0.80")
+set(QT_MIN_VERSION "6.6.0")
+set(KF6_MIN_VERSION "5.240.0")
+set(KDE_COMPILERSETTINGS_LEVEL "5.82")
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 include(KDEInstallDirs)
 include(KDECMakeSettings)
-include(KDECompilerSettings)
-include(ECMInstallIcons)
-include(ECMMarkAsTest)
-include(ECMMarkNonGuiExecutable)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMOptionalAddSubdirectory)
 include(FeatureSummary)
-include(CheckIncludeFiles)
+include(KDEClangFormat)
+include(ECMSetupVersion)
+include(ECMQtDeclareLoggingCategory)
+include(ECMQmlModule)
 
-find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-Core
-DBus
-Widgets
-Mqtt
+
+find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+    Core
+    DBus
+    Widgets
+    Mqtt
 )
 
-set(KF5_MIN_VERSION "5.2.0")
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+set(KF6_MIN_VERSION "5.240.0")
+find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
+    Config
     Notifications
     IdleTime
 )
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-set(FOO_SOURCES main.cpp)
-add_executable(pc_mqtt_node ${FOO_SOURCES})
-target_link_libraries(pc_mqtt_node Qt5::Gui Qt5::Widgets Qt5::Mqtt Qt5::DBus KF5::IdleTime KF5::Notifications)
+set(SOURCES main.cpp components.cpp login1_manager_interface.cpp)
+add_executable(linux-ha-control ${SOURCES})
+target_link_libraries(linux-ha-control Qt6::Gui Qt6::Widgets Qt6::Mqtt Qt6::DBus KF6::IdleTime KF6::Notifications KF6::ConfigCore)
+
+install(TARGETS linux-ha-control ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+# install( PROGRAMS net.davidedmundson.ha-receiver.desktop  DESTINATION )
+
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 

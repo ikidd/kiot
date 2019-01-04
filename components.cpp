@@ -8,9 +8,12 @@
 #include <KNotification>
 #include <KIdleTime>
 
+#include <QDBusConnection>
+#include "login1_manager_interface.h"
+
 static QString s_discoveryPrefix = "homeassistant";
 
-Node::Node(QMqttClient *client, QObject *parent):
+Entity::Entity(QMqttClient *client, QObject *parent):
     QObject(parent),
     m_client(client)
 {
@@ -20,23 +23,26 @@ Node::Node(QMqttClient *client, QObject *parent):
     });
 }
 
-QString Node::hostname() const
+QString Entity::hostname() const
 {
     return QHostInfo::localHostName().toLower();
 }
 
-QString Node::buildTopic() const
+QString Entity::baseTopic() const
 {
     return hostname() + "/" + id();
 }
 
-QMqttClient *Node::client() const
+QMqttClient *Entity::client() const
 {
     return m_client;
 }
 
-void Node::sendRegistration()
+void Entity::sendRegistration()
 {
+    if (haType().isEmpty()) {
+        return;
+    }
     QVariantMap config = haConfig();
     config["name"] = QHostInfo::localHostName() + " " + name();
     //TODO the new HA device crap
@@ -47,37 +53,38 @@ void Node::sendRegistration()
         config["payload_not_available"] = "off";
     }
 
+    qDebug() <<  s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config";
     m_client->publish(s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config", QJsonDocument(QJsonObject::fromVariantMap(config)).toJson(QJsonDocument::Compact), 0, true);
 }
 
 ConnectedNode::ConnectedNode(QMqttClient *c, QObject *parent):
-    Node(c, parent)
+    Entity(c, parent)
 {
-    c->setWillTopic(buildTopic());
+    c->setWillTopic(baseTopic());
     c->setWillMessage("off");
     c->setWillRetain(true);
 }
 
 ConnectedNode::~ConnectedNode()
 {
-    client()->publish(buildTopic(), "off");
+    client()->publish(baseTopic(), "off");
 }
 
 void ConnectedNode::setInitialState()
 {
-    client()->publish(buildTopic(), "on");
+    client()->publish(baseTopic(), "on");
 }
 
-NotificationNode::NotificationNode(QMqttClient *c, QObject *parent):
-    Node(c, parent)
+Notifications::Notifications(QMqttClient *c, QObject *parent):
+    Entity(c, parent)
 {
-    c->connect(c, &QMqttClient::connected, this, [this]() {
-        auto watcher = client()->subscribe(buildTopic());
-        connect(watcher, &QMqttSubscription::messageReceived, this, &NotificationNode::notificationCallback);
+    connect(c, &QMqttClient::connected, this, [this]() {
+        auto watcher = client()->subscribe(baseTopic());
+        connect(watcher, &QMqttSubscription::messageReceived, this, &Notifications::notificationCallback);
     });
 }
 
-void NotificationNode::notificationCallback(const QMqttMessage &message)
+void Notifications::notificationCallback(const QMqttMessage &message)
 {
     auto docs = QJsonDocument::fromJson(message.payload());
     auto objs = docs.object();
@@ -86,23 +93,71 @@ void NotificationNode::notificationCallback(const QMqttMessage &message)
     KNotification::event(KNotification::Notification, title, body);
 }
 
-ActiveNode::ActiveNode(QMqttClient *c, QObject *parent):
-    Node(c, parent)
+ActiveSensor::ActiveSensor(QMqttClient *c, QObject *parent):
+    Entity(c, parent)
 {
     auto kidletime = KIdleTime::instance();
     auto id = kidletime->addIdleTimeout(5 * 60 * 1000);
     connect(kidletime, &KIdleTime::resumingFromIdle, this, [this]() {
-        client()->publish(buildTopic(), "active");
+        client()->publish(baseTopic(), "active");
     });
-    connect(kidletime, QOverload<int>::of(&KIdleTime::timeoutReached), this, [this, id](int _id) {
+    connect(kidletime, &KIdleTime::timeoutReached, this, [this, id, kidletime](int _id) {
         if (_id != id) {
             return;
         }
-        client()->publish(buildTopic(), "idle");
+        client()->publish(baseTopic(), "idle");
+        kidletime->catchNextResumeEvent();
     });
 }
 
-void ActiveNode::setInitialState()
+void ActiveSensor::setInitialState()
 {
-    client()->publish(buildTopic(), "active");
+    client()->publish(baseTopic(), "active");
 }
+
+SuspendSwitch::SuspendSwitch(QMqttClient *client, QObject *parent)
+    : Entity(client, parent)
+{
+    connect(client, &QMqttClient::connected, this, [this]() {
+        auto watcher = this->client()->subscribe(baseTopic());
+        connect(watcher, &QMqttSubscription::messageReceived, this, []() {
+            OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
+                                                        QStringLiteral("/org/freedesktop/login1"),
+                                                        QDBusConnection::systemBus());
+
+            logind.Suspend(true).waitForFinished();
+        });
+    });
+}
+
+LockedState::LockedState(QMqttClient *client, QObject *parent)
+    : Entity(client, parent)
+{
+    QDBusConnection::sessionBus().connect(QStringLiteral("org.freedesktop.ScreenSaver"),
+                                          QStringLiteral("/ScreenSaver"),
+                                          QStringLiteral("org.freedesktop.ScreenSaver"),
+                                          QStringLiteral("ActiveChanged"),
+                                          this, SLOT(screenLockedChanged(bool)));
+}
+
+void LockedState::setInitialState()
+{
+    auto isLocked = QDBusMessage::createMethodCall("org.freedesktop.ScreenSaver",
+                                   "/ScreenSaver",
+                                   "org.freedesktop.ScreenSaver",
+                                   "GetActive");
+    auto pendingCall = QDBusConnection::sessionBus().asyncCall(isLocked);
+    pendingCall.waitForFinished();
+    bool locked = pendingCall.reply().arguments().at(0).toBool();
+    screenLockedChanged(locked);
+}
+
+void LockedState::screenLockedChanged(bool active)
+{
+    if (active) {
+        client()->publish(baseTopic(), "locked");
+    } else {
+        client()->publish(baseTopic(), "unlocked");
+    }
+}
+
