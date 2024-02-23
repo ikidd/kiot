@@ -4,78 +4,17 @@
 #include <QtGlobal>
 // #include <QNetworkConfigurationManager>
 
-#include <KConfig>
-#include <KSharedConfig>
-#include <KConfigGroup>
 
+
+#include "core.h"
 #include "components.h"
 
-class HAClient : public QObject {
-public:
-    HAClient();
-    ~HAClient();
-    QMqttClient *client() const {
-        return m_client;
-    }
-private:
-    QMqttClient *m_client;
-    // QNetworkConfigurationManager m_networkConfigurationManager;
-};
-
-HAClient::HAClient() {
-    auto config = KSharedConfig::openConfig();
-    qDebug() << config->name();
-    auto group = config->group("general");
-    m_client = new QMqttClient(this);
-    m_client->setHostname(group.readEntry("host"));
-    m_client->setPort(group.readEntry("port", 1883));
-    m_client->setUsername(group.readEntry("user"));
-    m_client->setUsername(group.readEntry("password"));
-
-    //read from config for enable or not
-    new ConnectedNode(m_client, this);
-    new ActiveSensor(m_client, this);
-    new Notifications(m_client, this);
-    new SuspendSwitch(m_client, this);
-    new LockedState(m_client, this);
-
-    auto connectToHost = [this]() {
-        // if(m_networkConfigurationManager.isOnline()) {
-            m_client->connectToHost();
-        // }
-    };
-
-
-    //
-    // connect(&m_networkConfigurationManager, &QNetworkConfigurationManager::configurationChanged, this, connectToHost);
-    //
-    connect(m_client, &QMqttClient::stateChanged, this, [](QMqttClient::ClientState state) {
-        switch (state) {
-        case QMqttClient::Connected:
-            qDebug() << "connected";
-            break;
-        case QMqttClient::Connecting:
-            qDebug() << "connecting";
-            break;
-        case QMqttClient::Disconnected:
-            qDebug() << "disconnected";
-            //do I need to reconnect?
-            break;
-        }
-    });
-
-    connectToHost();
-}
-
-HAClient::~HAClient()
-{
-}
 
 int main(int argc, char ** argv)
 {
     //TODO app name and stuff
     QApplication app(argc, argv);
-    HAClient client;
+    HaControl client;
     app.exec();
 }
 

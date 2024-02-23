@@ -11,71 +11,7 @@
 #include <QDBusConnection>
 #include "login1_manager_interface.h"
 
-static QString s_discoveryPrefix = "homeassistant";
 
-Entity::Entity(QMqttClient *client, QObject *parent):
-    QObject(parent),
-    m_client(client)
-{
-    connect(m_client, &QMqttClient::connected, this, [this]() {
-        sendRegistration();
-        setInitialState();
-    });
-}
-
-QString Entity::hostname() const
-{
-    return QHostInfo::localHostName().toLower();
-}
-
-QString Entity::baseTopic() const
-{
-    return hostname() + "/" + id();
-}
-
-QMqttClient *Entity::client() const
-{
-    return m_client;
-}
-
-void Entity::sendRegistration()
-{
-    if (haType().isEmpty()) {
-        return;
-    }
-    QVariantMap config = haConfig();
-    config["name"] = QHostInfo::localHostName() + " " + name();
-    //TODO the new HA device crap
-
-    if (haSetAvailability()) {
-        config["availability_topic"] = hostname() + "/connected";
-        config["payload_available"] = "on";
-        config["payload_not_available"] = "off";
-    }
-    config["device"] = QVariantMap({{"identifiers", "linux_ha_bridge_" + hostname() }});
-    config["unique_id"] = "linux_ha_control_"+ hostname() + "_" + id();
-
-    qDebug() <<  s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config" << config;
-    m_client->publish(s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config", QJsonDocument(QJsonObject::fromVariantMap(config)).toJson(QJsonDocument::Compact), 0, true);
-}
-
-ConnectedNode::ConnectedNode(QMqttClient *c, QObject *parent):
-    Entity(c, parent)
-{
-    c->setWillTopic(baseTopic());
-    c->setWillMessage("off");
-    c->setWillRetain(true);
-}
-
-ConnectedNode::~ConnectedNode()
-{
-    client()->publish(baseTopic(), "off");
-}
-
-void ConnectedNode::setInitialState()
-{
-    client()->publish(baseTopic(), "on");
-}
 
 Notifications::Notifications(QMqttClient *c, QObject *parent):
     Entity(c, parent)

@@ -42,7 +42,7 @@ find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-set(SOURCES main.cpp components.cpp login1_manager_interface.cpp)
+set(SOURCES main.cpp core.cpp components.cpp login1_manager_interface.cpp)
 add_executable(linux-ha-control ${SOURCES})
 target_link_libraries(linux-ha-control Qt6::Gui Qt6::Widgets Qt6::Mqtt Qt6::DBus KF6::IdleTime KF6::Notifications KF6::ConfigCore)
 
