@@ -14,11 +14,12 @@ class HAClient : public QObject {
 public:
     HAClient();
     ~HAClient();
+    QMqttClient *client() const {
+        return m_client;
+    }
 private:
     QMqttClient *m_client;
     // QNetworkConfigurationManager m_networkConfigurationManager;
-
-    void updateStatus(const QByteArray &status);
 };
 
 HAClient::HAClient() {
@@ -94,10 +95,11 @@ int main(int argc, char ** argv)
 
  Konversation queue (knotification plugin....or manually add Execute line in the relevant place?)
  Deliberately Invasive UI (i.e prevent work until you empty the washing machine - like rsibreak)
- Shortcut pressed sensor?
+ Shortcut pressed event?
  Lock status?
  Battery?
  Only try to connect on certain wifi networks?
+ NightMode
 
  Config
  [general]
@@ -112,3 +114,4 @@ int main(int argc, char ** argv)
 
 
 // $hostname/locked
+

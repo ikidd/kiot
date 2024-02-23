@@ -68,7 +68,14 @@ public:
             {"state_topic", baseTopic()},
             {"payload_on", "on"},
             {"payload_off", "off"},
-            {"device_class", "power"}
+            {"device_class", "power"},
+            {"device", QVariantMap({
+                           {"name", hostname() },
+                           {"identifiers", "linux_ha_bridge_" + hostname() },
+                           {"sw_version", "0.1"},
+                           {"manufacturer", "Linux HA Bridge"},
+                           {"model", "Linux"}
+                       })}
         });
     }
     bool haSetAvailability() const override {
@@ -152,11 +159,12 @@ public:
         return QStringLiteral("Locked");
     }
     QString haType() const override {
-        return QStringLiteral("binary_sensor");
+        return QStringLiteral("switch");
     }
     QVariantMap haConfig() const override {
         return {
             {"state_topic", baseTopic()},
+            {"command_topic", baseTopic() + "/set"},
             {"payload_on", "locked"},
             {"payload_off", "unlocked"},
             {"device_class", "lock"}
@@ -165,4 +173,5 @@ public:
     void setInitialState() override;
 private Q_SLOTS:
     void screenLockedChanged(bool active);
+    void screenLockStateRequested(const QMqttMessage &message);
 };

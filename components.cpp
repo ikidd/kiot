@@ -52,8 +52,10 @@ void Entity::sendRegistration()
         config["payload_available"] = "on";
         config["payload_not_available"] = "off";
     }
+    config["device"] = QVariantMap({{"identifiers", "linux_ha_bridge_" + hostname() }});
+    config["unique_id"] = "linux_ha_control_"+ hostname() + "_" + id();
 
-    qDebug() <<  s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config";
+    qDebug() <<  s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config" << config;
     m_client->publish(s_discoveryPrefix + "/" + haType() + "/" + hostname() + "/" + id() + "/config", QJsonDocument(QJsonObject::fromVariantMap(config)).toJson(QJsonDocument::Compact), 0, true);
 }
 
@@ -138,6 +140,12 @@ LockedState::LockedState(QMqttClient *client, QObject *parent)
                                           QStringLiteral("org.freedesktop.ScreenSaver"),
                                           QStringLiteral("ActiveChanged"),
                                           this, SLOT(screenLockedChanged(bool)));
+
+    connect(client, &QMqttClient::connected, this, [this]() {
+        auto watcher = this->client()->subscribe(baseTopic() + "/set");
+        connect(watcher, &QMqttSubscription::messageReceived, this, &LockedState::screenLockStateRequested);
+    });
+
 }
 
 void LockedState::setInitialState()
@@ -161,3 +169,14 @@ void LockedState::screenLockedChanged(bool active)
     }
 }
 
+void LockedState::screenLockStateRequested(const QMqttMessage &message)
+{
+    OrgFreedesktopLogin1ManagerInterface login1Session(QStringLiteral("org.freedesktop.login1"),
+                                                 QStringLiteral("/org/freedesktop/session/auto"),
+                                                 QDBusConnection::systemBus());
+    if (message.payload() == "locked") {
+        // login1Session.Lock();
+    } else if (message.payload() == "unlocked") {
+        // login1Session.Unlock();
+    }
+}
