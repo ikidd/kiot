@@ -1,79 +1,102 @@
+#pragma once
+
 #include <QObject>
 #include <QVariantMap>
 
 class QMqttClient;
+class QMqttSubscription;
+
+// If extending, you want to create an Entity of type BinarySensor, Button or Switch
+// Generally these class abstract the connected state of the mqtt server and discovery
+// but plugins are able to have low level access if they want to
 
 class HaControl : public QObject {
 public:
+    HaControl();
     ~HaControl();
     static QMqttClient *mqttClient() {
         return s_self->m_client;
     }
 private:
-    HaControl();
     static HaControl *s_self;
     QMqttClient *m_client;
     // QNetworkConfigurationManager m_networkConfigurationManager;
 };
 
+/**
+ * @brief The Entity class is a base class for types (binary sensor, sensor, etc)
+ */
 class Entity: public QObject
 {
     Q_OBJECT
 public:
-    virtual QString id() const = 0;
-    virtual QString name() const = 0;
-    virtual void setInitialState() {}
+    void setId(const QString &newId);
+    QString id() const;
 
-    virtual QString haType() const = 0;
-    virtual QVariantMap haConfig() const {
-        return {};
-    }
-    virtual bool haSetAvailability() const {
-        return true;
-    }
-    void sendRegistration();
-protected:
-    Entity(QMqttClient *client, QObject *parent);
+    void setName(const QString &newName);
+    QString name() const;
+
+    void setDiscoveryConfig(const QString &key, const QVariant &value);
+
+    Entity(QObject *parent);
     QString hostname() const;
     QString baseTopic() const;
-    QMqttClient *client() const;
+
+protected:
+    /**
+     * Called on MQTT connect, it may be called more than once
+     */
+    virtual void init();
+    void sendRegistration();
+    void setHaType(const QString &newHaType);
+    QString haType() const;
+    void setHaConfig(const QVariantMap &newHaConfig);
+
 private:
-    QMqttClient *m_client;
+    QString m_id;
+    QString m_name;
+    QString m_haType;
+    QVariantMap m_haConfig;
 };
 
-
-class ConnectedNode: public Entity
+class BinarySensor : public Entity
 {
     Q_OBJECT
 public:
-    ConnectedNode(QMqttClient *client, QObject *parent);
-    ~ConnectedNode();
-    QString id() const override {
-        return QStringLiteral("connected");
-    }
-    QString name () const override {
-        return QStringLiteral("Connected");
-    }
-    QString haType() const override {
-        return QStringLiteral("binary_sensor");
-    };
-    QVariantMap haConfig() const override {
-        return QVariantMap({
-            {"state_topic", baseTopic()},
-            {"payload_on", "on"},
-            {"payload_off", "off"},
-            {"device_class", "power"},
-            {"device", QVariantMap({
-                           {"name", hostname() },
-                           {"identifiers", "linux_ha_bridge_" + hostname() },
-                           {"sw_version", "0.1"},
-                           {"manufacturer", "Linux HA Bridge"},
-                           {"model", "Linux"}
-                       })}
-        });
-    }
-    bool haSetAvailability() const override {
-        return false;
-    }
-    void setInitialState() override;
+    BinarySensor(QObject *parent = nullptr);
+    void setState(bool state);
+protected:
+    void init() override;
+private:
+    bool m_state = false;
 };
+
+class Button : public Entity
+{
+    Q_OBJECT
+public:
+    Button(QObject *parent = nullptr);
+Q_SIGNALS:
+    void triggered();
+protected:
+    void init() override;
+private:
+    QScopedPointer<QMqttSubscription> m_subscription;
+};
+
+class Switch : public Entity
+{
+    Q_OBJECT
+public:
+    Switch(QObject *parent = nullptr);
+    void setState(bool state);
+Q_SIGNALS:
+    void stateChangeRequested(bool state);
+protected:
+    void init() override;
+private:
+    bool m_state = false;
+    QScopedPointer<QMqttSubscription> m_subscription;
+};
+
+

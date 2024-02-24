@@ -12,12 +12,14 @@
 #include "login1_manager_interface.h"
 
 
-
-Notifications::Notifications(QMqttClient *c, QObject *parent):
-    Entity(c, parent)
+Notifications::Notifications(QObject *parent):
+    Entity(parent)
 {
-    connect(c, &QMqttClient::connected, this, [this]() {
-        auto watcher = client()->subscribe(baseTopic());
+    setId("notifications");
+    setName("Notifications");
+
+    connect(HaControl::mqttClient(), &QMqttClient::connected, this, [this]() {
+        auto watcher = HaControl::mqttClient()->subscribe(baseTopic());
         connect(watcher, &QMqttSubscription::messageReceived, this, &Notifications::notificationCallback);
     });
 }
@@ -31,88 +33,89 @@ void Notifications::notificationCallback(const QMqttMessage &message)
     KNotification::event(KNotification::Notification, title, body);
 }
 
-ActiveSensor::ActiveSensor(QMqttClient *c, QObject *parent):
-    Entity(c, parent)
+ActiveSensor::ActiveSensor(QObject *parent):
+    QObject(parent)
 {
+    m_sensor.setId("active");
+    m_sensor.setName("Active");
+    m_sensor.setDiscoveryConfig("device_class", "presence");
+
+    // mark as idle after 1 minute. Then in HA to detect a 5 minute idle-ness, wait till we're in this state for 4 minutes
+
     auto kidletime = KIdleTime::instance();
-    auto id = kidletime->addIdleTimeout(5 * 60 * 1000);
+    auto id = kidletime->addIdleTimeout(60 * 1000);
     connect(kidletime, &KIdleTime::resumingFromIdle, this, [this]() {
-        client()->publish(baseTopic(), "active");
+        m_sensor.setState(true);
     });
     connect(kidletime, &KIdleTime::timeoutReached, this, [this, id, kidletime](int _id) {
         if (_id != id) {
             return;
         }
-        client()->publish(baseTopic(), "idle");
+        m_sensor.setState(false);
         kidletime->catchNextResumeEvent();
     });
+    m_sensor.setState(true);
 }
 
-void ActiveSensor::setInitialState()
+SuspendSwitch::SuspendSwitch(QObject *parent)
+    : QObject(parent)
 {
-    client()->publish(baseTopic(), "active");
-}
+    m_button.setId("suspend");
+    m_button.setName("Suspend");
 
-SuspendSwitch::SuspendSwitch(QMqttClient *client, QObject *parent)
-    : Entity(client, parent)
-{
-    connect(client, &QMqttClient::connected, this, [this]() {
-        auto watcher = this->client()->subscribe(baseTopic());
-        connect(watcher, &QMqttSubscription::messageReceived, this, []() {
-            OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
-                                                        QStringLiteral("/org/freedesktop/login1"),
-                                                        QDBusConnection::systemBus());
-
-            logind.Suspend(true).waitForFinished();
-        });
+    connect(&m_button, &Button::triggered, this, []() {
+        OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
+                                                    QStringLiteral("/org/freedesktop/login1"),
+                                                    QDBusConnection::systemBus());
+        logind.Suspend(true).waitForFinished();
     });
 }
 
-LockedState::LockedState(QMqttClient *client, QObject *parent)
-    : Entity(client, parent)
+LockedState::LockedState(QObject *parent)
+    : QObject(parent)
 {
+    m_locked.setId("locked");
+    m_locked.setName("Locked");
+    m_locked.setDiscoveryConfig("device_class", "lock");
+
+    // why am I used freedesktop here, and logind later.... I don't know
     QDBusConnection::sessionBus().connect(QStringLiteral("org.freedesktop.ScreenSaver"),
                                           QStringLiteral("/ScreenSaver"),
                                           QStringLiteral("org.freedesktop.ScreenSaver"),
                                           QStringLiteral("ActiveChanged"),
                                           this, SLOT(screenLockedChanged(bool)));
 
-    connect(client, &QMqttClient::connected, this, [this]() {
-        auto watcher = this->client()->subscribe(baseTopic() + "/set");
-        connect(watcher, &QMqttSubscription::messageReceived, this, &LockedState::screenLockStateRequested);
-    });
+    connect(&m_locked, &Switch::stateChangeRequested, this, &LockedState::stateChangeRequested);
 
-}
-
-void LockedState::setInitialState()
-{
     auto isLocked = QDBusMessage::createMethodCall("org.freedesktop.ScreenSaver",
                                    "/ScreenSaver",
                                    "org.freedesktop.ScreenSaver",
                                    "GetActive");
     auto pendingCall = QDBusConnection::sessionBus().asyncCall(isLocked);
     pendingCall.waitForFinished();
-    bool locked = pendingCall.reply().arguments().at(0).toBool();
-    screenLockedChanged(locked);
+    const bool locked = pendingCall.reply().arguments().at(0).toBool();
+    m_locked.setState(locked);
 }
 
 void LockedState::screenLockedChanged(bool active)
 {
-    if (active) {
-        client()->publish(baseTopic(), "locked");
+    m_locked.setState(active);
+}
+
+void LockedState::stateChangeRequested(bool state)
+{
+    if (state) {
+        QDBusMessage lock = QDBusMessage::createMethodCall("org.freedesktop.login1",
+                                                           "/org/freedesktop/login1/session/auto",
+                                                           "org.freedesktop.login1.Session",
+                                                           "Lock");
+        QDBusConnection::systemBus().asyncCall(lock);
     } else {
-        client()->publish(baseTopic(), "unlocked");
+        QDBusMessage unlock = QDBusMessage::createMethodCall("org.freedesktop.login1",
+                                                             "/org/freedesktop/login1/session/auto",
+                                                             "org.freedesktop.login1.Session",
+                                                             "Unlock");
+        QDBusConnection::systemBus().asyncCall(unlock);
     }
 }
 
-void LockedState::screenLockStateRequested(const QMqttMessage &message)
-{
-    OrgFreedesktopLogin1ManagerInterface login1Session(QStringLiteral("org.freedesktop.login1"),
-                                                 QStringLiteral("/org/freedesktop/session/auto"),
-                                                 QDBusConnection::systemBus());
-    if (message.payload() == "locked") {
-        // login1Session.Lock();
-    } else if (message.payload() == "unlocked") {
-        // login1Session.Unlock();
-    }
-}

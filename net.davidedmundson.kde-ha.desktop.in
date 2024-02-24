@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=KDE Home Assistant Connector
+Icon=plasmashell
+OnlyShowIn=KDE;
+Type=Application
+X-KDE-StartupNotify=false
+NoDisplay=true
+Exec=@KDE_INSTALL_FULL_BINDIR@/kde-ha
