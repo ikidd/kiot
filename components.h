@@ -47,4 +47,7 @@ private:
     Switch m_locked;
 };
 
-
+class Scripts : public QObject
+{
+    Scripts(QObject *parent);
+};

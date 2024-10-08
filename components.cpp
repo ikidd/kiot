@@ -8,6 +8,9 @@
 #include <KNotification>
 #include <KIdleTime>
 
+#include <KSharedConfig>
+#include <KConfigGroup>
+
 #include <QDBusConnection>
 #include "login1_manager_interface.h"
 
@@ -119,3 +122,28 @@ void LockedState::stateChangeRequested(bool state)
     }
 }
 
+Scripts::Scripts(QObject *parent)
+    : QObject(parent)
+{
+    auto scriptConfigToplevel = KSharedConfig::openConfig()->group("Scripts");
+    const QStringList scriptIds = scriptConfigToplevel.groupList();
+    for (const QString &scriptId : scriptIds) {
+        auto scriptConfig = scriptConfigToplevel.group(scriptId);
+        const QString name = scriptConfig.readEntry("Name", scriptId);
+        const QString exec = scriptConfig.readEntry("Exec");
+
+        if (exec.isEmpty()) {
+            qWarning() << "Could not find script Exec entry for" << scriptId;
+            continue;
+        }
+
+        auto button = new Button(this);
+        button->setId(scriptId);
+        button->setName(name);
+        connect(button, &Button::triggered, this, [exec, scriptId]() {
+            qInfo() << "Running script " << scriptId;
+            // DAVE TODO flatpak escaping
+            QProcess::startDetached(exec);
+        });
+    }
+}
