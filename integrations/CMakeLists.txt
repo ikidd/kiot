@@ -1,9 +1,12 @@
 include_directories(..)
 add_library(KDEHAIntegrations OBJECT
-    components.cpp
-    login1_manager_interface.cpp
+    active.cpp
+    notifications.cpp
     scripts.cpp
+    lockedstate.cpp
     shortcuts.cpp
+    suspend.cpp
+    login1_manager_interface.cpp
 )
 
 target_link_libraries(KDEHAIntegrations
