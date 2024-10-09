@@ -11,9 +11,11 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 
+#include <QAction>
+#include <KGlobalAccel>
+
 #include <QDBusConnection>
 #include "login1_manager_interface.h"
-
 
 Notifications::Notifications(QObject *parent):
     Entity(parent)
@@ -140,10 +142,31 @@ Scripts::Scripts(QObject *parent)
         auto button = new Button(this);
         button->setId(scriptId);
         button->setName(name);
+        // Home assistant integration supports payloads, which we could expose as args
+        // maybe via some substitution in the exec line
         connect(button, &Button::triggered, this, [exec, scriptId]() {
             qInfo() << "Running script " << scriptId;
             // DAVE TODO flatpak escaping
             QProcess::startDetached(exec);
         });
+    }
+}
+
+Shortcuts::Shortcuts(QObject *parent)
+{
+    auto shortcutConfigToplevel = KSharedConfig::openConfig()->group("Shortcuts");
+    const QStringList shortcutIds = shortcutConfigToplevel.groupList();
+    for (const QString &shortcutId : shortcutIds) {
+        auto shortcutConfig = shortcutConfigToplevel.group(shortcutId);
+        const QString name = shortcutConfig.readEntry("Name", shortcutId);
+        QAction *action = new QAction(name, this);
+        action->setObjectName(shortcutId);
+
+        auto event = new Event(this);
+        event->setId(shortcutId);
+        event->setName(name);
+
+        KGlobalAccel::self()->setShortcut(action, {});
+        connect(action, &QAction::triggered, event, &Event::trigger);
     }
 }

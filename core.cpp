@@ -48,6 +48,7 @@ HaControl::HaControl() {
     new Notifications(this);
     new SuspendSwitch(this);
     new LockedState(this);
+    new Scripts(this);
 
     QTimer *reconnectTimer = new QTimer(this);
     reconnectTimer->setInterval(1000);
@@ -278,6 +279,51 @@ void BinarySensor::setState(bool state)
     m_state = state;
     if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
         HaControl::mqttClient()->publish(baseTopic(), state ? "true" : "false", 0, true);
+    }
+}
+
+Sensor::Sensor(QObject *parent)
+    : Entity(parent)
+{
+}
+
+void Sensor::init()
+{
+    setHaType("sensor");
+    setHaConfig({
+        {"state_topic", baseTopic()},
+    });
+    sendRegistration();
+    setState(m_state);
+}
+
+void Sensor::setState(const QString &state)
+{
+    m_state = state;
+    if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
+        HaControl::mqttClient()->publish(baseTopic(), state.toLatin1(), 0, true);
+    }
+}
+
+Event::Event(QObject *parent)
+    : Entity(parent)
+{
+}
+
+void Event::init()
+{
+    setHaType("event");
+    setHaConfig({
+        {"state_topic", baseTopic()},
+        {"event_types", {"pressed"}}
+    });
+    sendRegistration();
+}
+
+void Event::trigger()
+{
+    if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
+        HaControl::mqttClient()->publish(baseTopic(), "pressed", 0, true);
     }
 }
 

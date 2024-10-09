@@ -71,6 +71,28 @@ private:
     bool m_state = false;
 };
 
+class Sensor : public Entity
+{
+    Q_OBJECT
+public:
+    Sensor(QObject *parent = nullptr);
+    void setState(const QString &state);
+protected:
+    void init() override;
+private:
+    QString m_state;
+};
+
+class Event : public Entity
+{
+    Q_OBJECT
+public:
+    Event(QObject *parent = nullptr);
+    void trigger();
+protected:
+    void init() override;
+};
+
 class Button : public Entity
 {
     Q_OBJECT

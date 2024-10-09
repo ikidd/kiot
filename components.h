@@ -49,5 +49,11 @@ private:
 
 class Scripts : public QObject
 {
+public:
     Scripts(QObject *parent);
+};
+
+class Shortcuts : public QObject
+{
+    Shortcuts(QObject *parent);
 };

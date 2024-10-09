@@ -29,4 +29,16 @@ int main(int argc, char ** argv)
  port=1883
  user=myUsername
  password=myPassword
+
+[Scripts][myScript1]
+Name=Launch chrome
+Exec=google-chrome
+
+[Scripts][myScript2]
+...
+
+[Shortcuts][shortcut1]
+Name=foo #It will then appear in the shortcuts KCM for setting a key binding
+
+
  */
