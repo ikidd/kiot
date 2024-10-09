@@ -44,7 +44,10 @@ find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-set(SOURCES main.cpp core.cpp components.cpp login1_manager_interface.cpp)
+set(SOURCES main.cpp core.cpp)
+
+add_subdirectory(integrations)
+
 add_executable(kde-ha ${SOURCES})
 target_link_libraries(
     kde-ha
@@ -52,14 +55,14 @@ target_link_libraries(
     Qt6::Widgets
     Qt6::Mqtt
     Qt6::DBus
+    KDEHAIntegrations
     KF6::IdleTime
     KF6::GlobalAccel
     KF6::Notifications
-    KF6::ConfigCore)
+    KF6::ConfigCore
+)
 
 install(TARGETS kde-ha ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 ecm_install_configured_files(INPUT net.davidedmundson.kde-ha.desktop.in @ONLY DESTINATION ${KDE_INSTALL_AUTOSTARTDIR})
 
-
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
-

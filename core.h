@@ -2,13 +2,9 @@
 
 #include <QObject>
 #include <QVariantMap>
+#include <QMqttSubscription>
 
 class QMqttClient;
-class QMqttSubscription;
-
-// If extending, you want to create an Entity of type BinarySensor, Button or Switch
-// Generally these class abstract the connected state of the mqtt server and discovery
-// but plugins are able to have low level access if they want to
 
 class HaControl : public QObject {
 public:
@@ -17,19 +13,21 @@ public:
     static QMqttClient *mqttClient() {
         return s_self->m_client;
     }
-    static bool registerIntegration(const QMetaObject*plugin);
+
+    // you probably want the macro
+    static bool registerIntegrationFactory(const QFunctionPointer factory);
 private:
-    static QVector<const QMetaObject*> s_plugins;
+    static QList<QFunctionPointer> s_integrations;
     static HaControl *s_self;
     QMqttClient *m_client;
     // QNetworkConfigurationManager m_networkConfigurationManager;
 };
 
-// Dave's shitty plugin system to avoid updating this file each time we add an integration
-// Could have been a vector of factory callbacks, rather than having a pointless QObject
-#define REGISTER_PLUGIN(name) \
-static bool dummy##name = HaControl::registerIntegration(&name::staticMetaObject);
 
+
+// Dave's shitty plugin system to avoid updating this file each time we add an integration
+#define REGISTER_INTEGRATION(name) \
+static bool dummy##name = HaControl::registerIntegrationFactory(&name);
 
 /**
  * @brief The Entity class is a base class for types (binary sensor, sensor, etc)

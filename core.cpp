@@ -12,10 +12,8 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 
-#include "core.h"
-
 HaControl *HaControl::s_self = nullptr;
-QList<const QMetaObject*> HaControl::s_plugins;
+QList<QFunctionPointer> HaControl::s_integrations;
 
 // core internal sensor
 class ConnectedNode: public Entity
@@ -44,13 +42,9 @@ HaControl::HaControl() {
 
     new ConnectedNode(this);
 
-    for (auto metaObject : s_plugins) {
-        qDebug() << "Creating " << metaObject->className();
-        auto obj = metaObject->newInstance(Q_ARG(QObject*, this));
-        if (!obj) {
-            qWarning() << "Failed to instantiate " << metaObject->className();
-            qDebug() << "Is the ctor invokable?";
-        }
+    // create all the integrations
+    for (auto factory : s_integrations) {
+        factory();
     }
 
     QTimer *reconnectTimer = new QTimer(this);
@@ -86,9 +80,9 @@ HaControl::~HaControl()
 {
 }
 
-bool HaControl::registerIntegration(const QMetaObject *plugin)
+bool HaControl::registerIntegrationFactory(QFunctionPointer plugin)
 {
-    HaControl::s_plugins.append(plugin);
+    HaControl::s_integrations.append(plugin);
     return true;
 }
 

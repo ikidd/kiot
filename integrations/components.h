@@ -46,17 +46,3 @@ private Q_SLOTS:
 private:
     Switch m_locked;
 };
-
-class Scripts : public QObject
-{
-    Q_OBJECT
-public:
-    Q_INVOKABLE Scripts(QObject *parent);
-};
-
-class Shortcuts : public QObject
-{
-    Q_OBJECT
-public:
-    Q_INVOKABLE Shortcuts(QObject *parent);
-};
