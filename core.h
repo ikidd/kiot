@@ -17,11 +17,19 @@ public:
     static QMqttClient *mqttClient() {
         return s_self->m_client;
     }
+    static bool registerIntegration(const QMetaObject*plugin);
 private:
+    static QVector<const QMetaObject*> s_plugins;
     static HaControl *s_self;
     QMqttClient *m_client;
     // QNetworkConfigurationManager m_networkConfigurationManager;
 };
+
+// Dave's shitty plugin system to avoid updating this file each time we add an integration
+// Could have been a vector of factory callbacks, rather than having a pointless QObject
+#define REGISTER_PLUGIN(name) \
+static bool dummy##name = HaControl::registerIntegration(&name::staticMetaObject);
+
 
 /**
  * @brief The Entity class is a base class for types (binary sensor, sensor, etc)

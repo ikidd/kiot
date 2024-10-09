@@ -37,6 +37,7 @@ void Notifications::notificationCallback(const QMqttMessage &message)
     const QString body = objs["message"].toString();
     KNotification::event(KNotification::Notification, title, body);
 }
+REGISTER_PLUGIN(Notifications);
 
 ActiveSensor::ActiveSensor(QObject *parent):
     QObject(parent)
@@ -61,6 +62,7 @@ ActiveSensor::ActiveSensor(QObject *parent):
     });
     m_sensor.setState(true);
 }
+REGISTER_PLUGIN(ActiveSensor);
 
 SuspendSwitch::SuspendSwitch(QObject *parent)
     : QObject(parent)
@@ -75,6 +77,7 @@ SuspendSwitch::SuspendSwitch(QObject *parent)
         logind.Suspend(true).waitForFinished();
     });
 }
+REGISTER_PLUGIN(SuspendSwitch);
 
 LockedState::LockedState(QObject *parent)
     : QObject(parent)
@@ -123,10 +126,12 @@ void LockedState::stateChangeRequested(bool state)
         QDBusConnection::systemBus().asyncCall(unlock);
     }
 }
+REGISTER_PLUGIN(LockedState);
 
 Scripts::Scripts(QObject *parent)
     : QObject(parent)
 {
+    qInfo() << "Loading scripts";
     auto scriptConfigToplevel = KSharedConfig::openConfig()->group("Scripts");
     const QStringList scriptIds = scriptConfigToplevel.groupList();
     for (const QString &scriptId : scriptIds) {
@@ -151,6 +156,8 @@ Scripts::Scripts(QObject *parent)
         });
     }
 }
+REGISTER_PLUGIN(Scripts);
+
 
 Shortcuts::Shortcuts(QObject *parent)
 {
@@ -170,3 +177,5 @@ Shortcuts::Shortcuts(QObject *parent)
         connect(action, &QAction::triggered, event, &Event::trigger);
     }
 }
+
+REGISTER_PLUGIN(Shortcuts);

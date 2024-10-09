@@ -11,7 +11,7 @@ class ActiveSensor: public QObject
 {
     Q_OBJECT
 public:
-    ActiveSensor(QObject *parent);
+    Q_INVOKABLE ActiveSensor(QObject *parent);
 private:
     BinarySensor m_sensor;
 };
@@ -20,7 +20,7 @@ class Notifications: public Entity
 {
     Q_OBJECT
 public:
-    Notifications(QObject *parent);
+    Q_INVOKABLE Notifications(QObject *parent);
 
     void notificationCallback(const QMqttMessage &message);
 };
@@ -29,7 +29,7 @@ class SuspendSwitch : public QObject
 {
     Q_OBJECT
 public:
-    SuspendSwitch(QObject *parent);
+    Q_INVOKABLE SuspendSwitch(QObject *parent);
 private:
     Button m_button;
 };
@@ -38,7 +38,7 @@ class LockedState : public QObject
 {
     Q_OBJECT
 public:
-    LockedState(QObject *parent);
+    Q_INVOKABLE LockedState(QObject *parent);
 
 private Q_SLOTS:
     void screenLockedChanged(bool active);
@@ -49,11 +49,14 @@ private:
 
 class Scripts : public QObject
 {
+    Q_OBJECT
 public:
-    Scripts(QObject *parent);
+    Q_INVOKABLE Scripts(QObject *parent);
 };
 
 class Shortcuts : public QObject
 {
-    Shortcuts(QObject *parent);
+    Q_OBJECT
+public:
+    Q_INVOKABLE Shortcuts(QObject *parent);
 };

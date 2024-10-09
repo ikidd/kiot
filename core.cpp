@@ -13,9 +13,9 @@
 #include <KConfigGroup>
 
 #include "core.h"
-#include "components.h"
 
 HaControl *HaControl::s_self = nullptr;
+QList<const QMetaObject*> HaControl::s_plugins;
 
 // core internal sensor
 class ConnectedNode: public Entity
@@ -44,11 +44,14 @@ HaControl::HaControl() {
 
     new ConnectedNode(this);
 
-    new ActiveSensor(this);
-    new Notifications(this);
-    new SuspendSwitch(this);
-    new LockedState(this);
-    new Scripts(this);
+    for (auto metaObject : s_plugins) {
+        qDebug() << "Creating " << metaObject->className();
+        auto obj = metaObject->newInstance(Q_ARG(QObject*, this));
+        if (!obj) {
+            qWarning() << "Failed to instantiate " << metaObject->className();
+            qDebug() << "Is the ctor invokable?";
+        }
+    }
 
     QTimer *reconnectTimer = new QTimer(this);
     reconnectTimer->setInterval(1000);
@@ -81,6 +84,12 @@ HaControl::HaControl() {
 
 HaControl::~HaControl()
 {
+}
+
+bool HaControl::registerIntegration(const QMetaObject *plugin)
+{
+    HaControl::s_plugins.append(plugin);
+    return true;
 }
 
 static QString s_discoveryPrefix = "homeassistant";
