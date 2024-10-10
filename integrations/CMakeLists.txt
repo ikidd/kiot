@@ -10,6 +10,7 @@ add_library(KDEHAIntegrations OBJECT
     dndstate.cpp
     nightmode.cpp
     camera.cpp
+    accentcolour.cpp
 )
 
 target_link_libraries(KDEHAIntegrations
