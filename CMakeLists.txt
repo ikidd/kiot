@@ -48,7 +48,8 @@ set(SOURCES main.cpp core.cpp)
 
 add_subdirectory(integrations)
 
-add_executable(kde-ha ${SOURCES})
+add_executable(kde-ha ${SOURCES}
+    dbusproperty.h dbusproperty.cpp)
 target_link_libraries(
     kde-ha
     Qt6::Gui

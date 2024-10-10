@@ -7,6 +7,7 @@ add_library(KDEHAIntegrations OBJECT
     shortcuts.cpp
     suspend.cpp
     login1_manager_interface.cpp
+    dndstate.cpp
 )
 
 target_link_libraries(KDEHAIntegrations
