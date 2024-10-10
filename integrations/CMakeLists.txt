@@ -8,6 +8,7 @@ add_library(KDEHAIntegrations OBJECT
     suspend.cpp
     login1_manager_interface.cpp
     dndstate.cpp
+    nightmode.cpp
 )
 
 target_link_libraries(KDEHAIntegrations
