@@ -37,6 +37,8 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 set(KF6_MIN_VERSION "5.240.0")
 find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
     Config
+    CoreAddons
+    DBusAddons
     Notifications
     IdleTime
     GlobalAccel
@@ -53,14 +55,11 @@ add_executable(kde-ha ${SOURCES}
 target_link_libraries(
     kde-ha
     Qt6::Gui
-    Qt6::Widgets
     Qt6::Mqtt
     Qt6::DBus
     KDEHAIntegrations
-    KF6::IdleTime
-    KF6::GlobalAccel
-    KF6::Notifications
-    KF6::ConfigCore
+    KF6::CoreAddons
+    KF6::DBusAddons
 )
 
 install(TARGETS kde-ha ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

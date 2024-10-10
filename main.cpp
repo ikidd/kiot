@@ -1,44 +1,26 @@
 #include <QApplication>
 #include <QDebug>
-#include <QMqttClient>
-#include <QtGlobal>
-// #include <QNetworkConfigurationManager>
 
-#include <KConfig>
+#include <KAboutData>
 #include <KSharedConfig>
 #include <KConfigGroup>
+#include <KDBusService>
 
 #include "core.h"
 
 int main(int argc, char ** argv)
 {
     QApplication app(argc, argv);
+    KAboutData aboutData(
+        QStringLiteral("kde-ha"),
+        "KDE HA",
+        QStringLiteral("0.1"),
+        "KDE Home Automation Connect",
+        KAboutLicense::GPL_V3,
+        "© 2024",
+        "HA Deamon"
+    );
+    KDBusService service(KDBusService::Unique);
     HaControl appControl;
     app.exec();
 }
-
-// There are 3 bits of code:
-// HaControl, main daemon class, does connecting and whatnot
-// Entity, represents an entity in HA. Subclassed into the different types
-// Plugins (components.cpp). These are grouped by desktop related activities. Each plugin can have multiple entities.
-
-/*
- Config
- [general]
- host=some.host
- port=1883
- user=myUsername
- password=myPassword
-
-[Scripts][myScript1]
-Name=Launch chrome
-Exec=google-chrome
-
-[Scripts][myScript2]
-...
-
-[Shortcuts][shortcut1]
-Name=foo #It will then appear in the shortcuts KCM for setting a key binding
-
-
- */
