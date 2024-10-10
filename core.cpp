@@ -316,10 +316,12 @@ Event::Event(QObject *parent)
 
 void Event::init()
 {
-    setHaType("event");
+    setHaType("device_automation");
     setHaConfig({
-        {"state_topic", baseTopic()},
-        {"event_types", {"pressed"}}
+        {"automation_type", "trigger"},
+        {"topic", baseTopic()},
+        {"type", {"button_short_press"}},
+        {"subtype", name()}
     });
     sendRegistration();
 }
@@ -327,7 +329,8 @@ void Event::init()
 void Event::trigger()
 {
     if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
-        HaControl::mqttClient()->publish(baseTopic(), "pressed", 0, true);
+        HaControl::mqttClient()->publish(baseTopic(), "pressed", 0, false);
+        HaControl::mqttClient()->publish(baseTopic(), "", 0, true);
     }
 }
 

@@ -22,6 +22,7 @@ void registerShortcuts()
 
         KGlobalAccel::self()->setShortcut(action, {});
         QObject::connect(action, &QAction::triggered, event, &Event::trigger);
+
     }
 }
 
