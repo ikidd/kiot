@@ -279,6 +279,7 @@ void BinarySensor::init()
 
 void BinarySensor::setState(bool state)
 {
+    qDebug() << "yay" << name() << state;
     m_state = state;
     if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
         HaControl::mqttClient()->publish(baseTopic(), state ? "true" : "false", 0, true);

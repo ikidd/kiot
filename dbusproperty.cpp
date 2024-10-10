@@ -19,7 +19,8 @@ DBusProperty::DBusProperty(const QString &service, const QString &path, const QS
 
     auto reply = QDBusConnection::sessionBus().call(message);
     if (reply.type() == QDBusMessage::ReplyMessage) {
-        m_value = reply.arguments().at(0);
+        QDBusVariant box = reply.arguments().at(0).value<QDBusVariant>();
+        m_value = box.variant();
     }
 }
 
