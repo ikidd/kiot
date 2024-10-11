@@ -9,6 +9,7 @@ add_library(KDEHAIntegrations OBJECT
     login1_manager_interface.cpp
     dndstate.cpp
     nightmode.cpp
+    camera.cpp
 )
 
 target_link_libraries(KDEHAIntegrations
