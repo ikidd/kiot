@@ -274,15 +274,29 @@ void BinarySensor::init()
         {"payload_off", "false"}
     });
     sendRegistration();
-    setState(m_state);
+    publish();
+}
+
+void BinarySensor::publish()
+{
+    qDebug() << name() << "publishing state" << m_state;
+    if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
+        HaControl::mqttClient()->publish(baseTopic(), m_state ? "true" : "false", 0, true);
+    }
 }
 
 void BinarySensor::setState(bool state)
 {
-    m_state = state;
-    if (HaControl::mqttClient()->state() == QMqttClient::Connected) {
-        HaControl::mqttClient()->publish(baseTopic(), state ? "true" : "false", 0, true);
+    if (m_state == state) {
+        return;
     }
+    m_state = state;
+    publish();
+}
+
+bool BinarySensor::state() const
+{
+    return m_state;
 }
 
 Sensor::Sensor(QObject *parent)
