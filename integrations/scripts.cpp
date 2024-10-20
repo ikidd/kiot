@@ -4,8 +4,7 @@
 #include <QAction>
 #include <QDebug>
 #include <QCoreApplication>
-#include <KGlobalAccel>
-#include <QProcess>
+#include <KProcess>
 
 void registerScripts()
 {
@@ -30,7 +29,10 @@ void registerScripts()
         QObject::connect(button, &Button::triggered, qApp, [exec, scriptId]() {
             qInfo() << "Running script " << scriptId;
             // DAVE TODO flatpak escaping
-            QProcess::startDetached(exec);
+            KProcess *p = new KProcess();
+            p->setShellCommand(exec);
+            p->startDetached();
+            delete p;
         });
     }
 }
