@@ -12,14 +12,12 @@ int main(int argc, char ** argv)
 {
     QApplication app(argc, argv);
     KAboutData aboutData(
-        QStringLiteral("kde-ha"),
-        "KDE HA",
+        QStringLiteral("kiot"),
+        "KDE IOT",
         QStringLiteral("0.1"),
-        "KDE Home Automation Connect",
+        "KDE Internet of Things Connection",
         KAboutLicense::GPL_V3,
-        "© 2024",
-        "HA Deamon"
-    );
+        "© 2024");
     KDBusService service(KDBusService::Unique);
     HaControl appControl;
     app.exec();

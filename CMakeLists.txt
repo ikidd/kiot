@@ -46,14 +46,14 @@ find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-set(SOURCES main.cpp core.cpp)
+set(SOURCES main.cpp core.cpp dbusproperty.h dbusproperty.cpp)
 
 add_subdirectory(integrations)
 
-add_executable(kde-ha ${SOURCES}
-    dbusproperty.h dbusproperty.cpp)
+add_executable(kiot ${SOURCES})
+
 target_link_libraries(
-    kde-ha
+    kiot
     Qt6::Gui
     Qt6::Mqtt
     Qt6::DBus
@@ -62,7 +62,8 @@ target_link_libraries(
     KF6::DBusAddons
 )
 
-install(TARGETS kde-ha ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
-ecm_install_configured_files(INPUT net.davidedmundson.kde-ha.desktop.in @ONLY DESTINATION ${KDE_INSTALL_AUTOSTARTDIR})
+install(TARGETS kiot ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+
+ecm_install_configured_files(INPUT org.davidedmundson.kiot.desktop.in @ONLY DESTINATION ${KDE_INSTALL_AUTOSTARTDIR})
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

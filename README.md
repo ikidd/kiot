@@ -1,17 +1,13 @@
 # About
 
-## What is it?
+Kiot (KDE Internet Of Things) is a background daemon that exposes useful information and actions for your local desktop session to a home automation controller like Home Assistant.
 
-## 
-This is not a smart home devices controller.
-
-i.e
-
-If you want a light to turn on when the PC is set to "Do not Disturb" mode, this app will not directly control the light. This app exposes the "Do not distrurb" mode to your controller (Home Assistant) so that you can create an automation there.
+This does not control smart home devices directly. i.e:
+If you want a light to turn on when the PC is set to "Do not Disturb" mode, this app will not directly control the light. This app exposes the "Do not distrub" state to your controller (Home Assistant) so that you can create an automation there.
 
 # Current State
 
-This is at a level where if you're ok compiling things from source and meddling with config files with no other hints it's usable. It's not a good user-facing product yet.
+This is pre-alpha software a level where if you're ok compiling things from source and meddling with config files by hand.
 
 # Setup
 
@@ -26,7 +22,7 @@ make install
 In home assistant MQTT server must be enabled.
 See https://www.home-assistant.io/integrations/mqtt/
 
-The following configuration needs to be placed in .config/kde-harc
+The following configuration needs to be placed in .config/kiotrc
 
 ```
  [general]
@@ -38,17 +34,25 @@ The following configuration needs to be placed in .config/kde-harc
 
 On the home assistant side everything should then work out-the-box with MQTT discovery.
 
+# Goals
+
+Compared to other similar projects, I want to avoid exposing pointless system statistic information that's not useful in a HA context. There's no point having a sensor for "kernel version" for example. Instead the focus is towards tighter desktop integration with things that are functional. This includes many KDE specific properties.
+
+The other focus is on ensuring that device triggers and actions appear in an easy-to-use way in Home Assistant's configuration.
 
 # Supported Features (so far)
 
  - User activity (binary sensor)
  - Locked state (switch)
  - Suspend (button)
+ - Camera in use (binary sensor)
  - Accent Colour (sensor)
  - Arbitrary Scripts (buttons)
  - Shortcuts (device_trigger)
- - Nightmode Inhibition (binary sensor)
+ - Nightmode status (binary sensor)
 
+
+ 
 # Additional Config
 
 ```
@@ -67,14 +71,9 @@ Exec=google-chrome
 
 [Shortcuts][myShortcut1]
 Name=Do a thing
+# This then becomes available in global shortcuts KCM for assignment and will appear as a trigger in HA, so keys can be bound to HA actions
 
 
 ```
+
  
- 
-# Related Links
-
-https://github.com/muniter/halinuxcompanion
-
-I found this long after starting this project. They make use of the native mobile_app integration which is nice, and allows for some two-way integration if we wanted to get applets and whatnot. But we do some core components a bit better without polling so it's more reactive.
-
