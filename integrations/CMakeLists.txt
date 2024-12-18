@@ -1,5 +1,5 @@
 include_directories(..)
-add_library(KDEHAIntegrations OBJECT
+add_library(KIOTIntegrations OBJECT
     active.cpp
     notifications.cpp
     scripts.cpp
@@ -13,7 +13,7 @@ add_library(KDEHAIntegrations OBJECT
     accentcolour.cpp
 )
 
-target_link_libraries(KDEHAIntegrations
+target_link_libraries(KIOTIntegrations
     KF6::IdleTime
     KF6::GlobalAccel
     KF6::Notifications

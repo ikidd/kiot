@@ -9,7 +9,7 @@ set(QT_MIN_VERSION "6.6.0")
 set(KF6_MIN_VERSION "5.240.0")
 set(KDE_COMPILERSETTINGS_LEVEL "5.82")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
@@ -57,7 +57,7 @@ target_link_libraries(
     Qt6::Gui
     Qt6::Mqtt
     Qt6::DBus
-    KDEHAIntegrations
+    KIOTIntegrations
     KF6::CoreAddons
     KF6::DBusAddons
 )
