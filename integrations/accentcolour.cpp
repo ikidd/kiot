@@ -18,7 +18,7 @@ public:
 
                // it's in kdeglobals
         KConfigGroup config(KSharedConfig::openConfig()->group("General"));
-        sensor->setState(config.readEntry("AccentColor"));
+        sensor->setState(config.readEntry("AccentColor")); // if not custom, then we should find out the default from the theme?
 
         m_watcher = KConfigWatcher::create(KSharedConfig::openConfig());
 

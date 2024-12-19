@@ -5,16 +5,44 @@
 
 void setupSuspend()
 {
-    Button *button = new Button(qApp);
-    button->setId("suspend");
-    button->setName("Suspend");
+    {
+        Button *button = new Button(qApp);
+        button->setId("suspend");
+        button->setName("Suspend");
 
-    QObject::connect(button, &Button::triggered, qApp, []() {
-        OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
-                                                    QStringLiteral("/org/freedesktop/login1"),
-                                                    QDBusConnection::systemBus());
-        logind.Suspend(true).waitForFinished();
-    });
+        QObject::connect(button, &Button::triggered, qApp, []() {
+            OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
+                                                        QStringLiteral("/org/freedesktop/login1"),
+                                                        QDBusConnection::systemBus());
+            logind.Suspend(false).waitForFinished();
+        });
+    }
+
+    {
+        Button *button = new Button(qApp);
+        button->setId("hibernate");
+        button->setName("Hibernate");
+
+        QObject::connect(button, &Button::triggered, qApp, []() {
+            OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
+                                                        QStringLiteral("/org/freedesktop/login1"),
+                                                        QDBusConnection::systemBus());
+            logind.Hibernate(false).waitForFinished();
+        });
+    }
+
+    {
+        Button *button = new Button(qApp);
+        button->setId("poweroff");
+        button->setName("Poweroff");
+
+        QObject::connect(button, &Button::triggered, qApp, []() {
+            OrgFreedesktopLogin1ManagerInterface logind(QStringLiteral("org.freedesktop.login1"),
+                                                        QStringLiteral("/org/freedesktop/login1"),
+                                                        QDBusConnection::systemBus());
+            logind.PowerOff(false).waitForFinished();
+        });
+    }
 }
 
 REGISTER_INTEGRATION(setupSuspend)

@@ -13,6 +13,8 @@ void setupDndSensor()
         sensor->setState(value.toBool());
     });
     sensor->setState(dnd->value().toBool());
+
+    // copy switch from nightmode
 }
 
 REGISTER_INTEGRATION(setupDndSensor)

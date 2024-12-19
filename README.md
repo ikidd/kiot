@@ -36,9 +36,9 @@ On the home assistant side everything should then work out-the-box with MQTT dis
 
 # Goals
 
-Compared to other similar projects, I want to avoid exposing pointless system statistic information that's not useful in a HA context. There's no point having a sensor for "kernel version" for example. Instead the focus is towards tighter desktop integration with things that are functional. This includes many KDE specific properties.
+Compared to other similar projects, I want to avoid exposing pointless system statistic information that's not useful in a HA context. There's no point having a sensor for "kernel version" for example. Instead the focus is towards tighter desktop integration with things that are practical and useful. This includes, but is not exclusive too some Plasma specific properties.
 
-The other focus is on ensuring that device triggers and actions appear in an easy-to-use way in Home Assistant's configuration.
+The other focus is on ensuring that device triggers and actions appear in an intuitive easy-to-use way in Home Assistant's configuration. 
 
 # Supported Features (so far)
 
@@ -50,7 +50,6 @@ The other focus is on ensuring that device triggers and actions appear in an eas
  - Arbitrary Scripts (buttons)
  - Shortcuts (device_trigger)
  - Nightmode status (binary sensor)
-
 
  
 # Additional Config
