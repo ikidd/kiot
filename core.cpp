@@ -32,7 +32,7 @@ HaControl::HaControl() {
     m_client->setHostname(group.readEntry("host"));
     m_client->setPort(group.readEntry("port", 1883));
     m_client->setUsername(group.readEntry("user"));
-    m_client->setUsername(group.readEntry("password"));
+    m_client->setPassword(group.readEntry("password"));
     m_client->setKeepAlive(3); // set a low ping so we become unavailable on suspend quickly
 
     //TODO read from config for enable or not
