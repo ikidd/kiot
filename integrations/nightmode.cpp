@@ -32,7 +32,7 @@ NightMode::NightMode(QObject *parent)
 
     m_switch = new Switch(this);
     m_switch->setId("nightmode_inhibit");
-    m_switch->setName("Night ode Inihibt");
+    m_switch->setName("Night Mode Inihibit");
     m_switch->setState(false); // the state is whether this switch is inhibiting the night mode, the sensor is if /anything/ is
     QObject::connect(m_switch, &Switch::stateChangeRequested, this, [this](bool state) {
         if (state) {
