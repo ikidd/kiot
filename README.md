@@ -11,11 +11,22 @@ This is pre-alpha software a level where if you're ok compiling things from sour
 
 # Setup
 
+Install prerequisites:
+
+Archlinux:
+```
+sudo pacman -S kf6 qt6-mqtt
+```
+
+Then 
+```
+git clone https://github.com/davidedmundson/kiot.git
 mkdir build
 cd build
 cmake ..
 make
 make install
+```
 
 # MQTT
 
